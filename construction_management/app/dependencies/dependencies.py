@@ -6,7 +6,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.db import get_db
 from app.services import UserService
 from app.models import UserModel, RoleUser
-from app.core import decode_access_token
+from app.core import decode_token
 from app.exceptions import InvalidTokenException, UserNotFoundError, InactiveUserError
 
 http_bearer_scheme = HTTPBearer(
@@ -20,7 +20,7 @@ def get_current_user(
 ) -> UserModel:
     user_service = UserService(db)
     token = credentials.credentials
-    payload = decode_access_token(token)
+    payload = decode_token(token)
 
     if payload.get("type") != "access":
         raise InvalidTokenException()

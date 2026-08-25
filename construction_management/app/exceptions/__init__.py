@@ -9,5 +9,9 @@ from .exceptions import (
     CannotRemoveOwnerError,
     MemberAlreadyExistsError,
     PermissionDeniedError,
-    SiteNotFoundError
+    SiteNotFoundError,
+    FileTooLargeError,
+    InvalidAssigneeError,
+    InvalidFileTypeError,
+    WorkItemNotFoundError
 )

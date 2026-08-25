@@ -41,7 +41,7 @@ def create_refresh_token(
     return encode(to_encode, settings.SECRET_KEY.get_secret_value(), settings.ALGORITHM)
 
 
-def decode_access_token(token: str) -> dict[str, Any]:
+def decode_token(token: str) -> dict[str, Any]:
     try:
         return decode(
             token,

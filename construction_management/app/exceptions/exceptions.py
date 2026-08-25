@@ -96,3 +96,39 @@ class CannotRemoveOwnerError(AppException):
             status_code=status.HTTP_400_BAD_REQUEST,
             error_code="CANNOT_REMOVE_OWNER",
         )
+
+
+class InvalidAssigneeError(AppException):
+    def __init__(self):
+        super().__init__(
+            message="Người được gán (Assignee) không thuộc công trường này!",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            error_code="INVALID_ASSIGNEE",
+        )
+
+
+class WorkItemNotFoundError(AppException):
+    def __init__(self):
+        super().__init__(
+            message="Không tìm thấy hạng mục thi công!",
+            status_code=status.HTTP_404_NOT_FOUND,
+            error_code="WORK_ITEM_NOT_FOUND",
+        )
+
+
+class InvalidFileTypeError(AppException):
+    def __init__(self):
+        super().__init__(
+            message="Chỉ chấp nhận file JPG, PNG, PDF!",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            error_code="INVALID_FILE_TYPE",
+        )
+
+
+class FileTooLargeError(AppException):
+    def __init__(self):
+        super().__init__(
+            message="Kích thước file vượt quá 5MB!",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            error_code="FILE_TOO_LARGE",
+        )

@@ -3,13 +3,14 @@ from slowapi.middleware import SlowAPIMiddleware
 from contextlib import asynccontextmanager
 from loguru import logger
 
-from app.common import limiter, register_handler, StandardResponse, success_response
+from app.common import limiter, register_handler, StandardResponse, success_response, setup_logging
 from app.core import settings
 from app.db import Base, engine
 from app.models import WorkItemModel, SiteMemberModel, ConstructionSiteModel, UserModel
-from app.routers import auth_router, user_router, site_router
+from app.routers import auth_router, user_router, site_router, work_item_router
 from app.seed import seed_data
 
+setup_logging()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -38,6 +39,7 @@ register_handler(app)
 app.include_router(auth_router)
 app.include_router(user_router)
 app.include_router(site_router)
+app.include_router(work_item_router)
 
 
 @app.get(

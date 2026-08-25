@@ -39,3 +39,25 @@ class WorkItemModel(Base):
     assignee: Mapped["UserModel | None"] = relationship(
         "UserModel", back_populates="work_items"
     )
+    attachments: Mapped[list["WorkItemAttachmentModel"]] = relationship(
+        "WorkItemAttachmentModel",
+        back_populates="work_item",
+        cascade="all, delete-orphan",
+    )
+
+
+class WorkItemAttachmentModel(Base):
+    __tablename__ = "work_item_attachments"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    work_item_id: Mapped[int] = mapped_column(
+        ForeignKey("work_items.id", ondelete="CASCADE")
+    )
+    file_path: Mapped[str] = mapped_column(String(255))
+    file_name: Mapped[str] = mapped_column(String(255))
+    file_type: Mapped[str] = mapped_column(String(50))
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+    work_item: Mapped["WorkItemModel"] = relationship(
+        "WorkItemModel", back_populates="attachments"
+    )

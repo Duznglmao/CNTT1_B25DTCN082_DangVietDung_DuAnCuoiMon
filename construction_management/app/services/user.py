@@ -16,7 +16,7 @@ from app.core import (
     verify_password,
     create_access_token,
     settings,
-    decode_access_token,
+    decode_token,
     create_refresh_token,
 )
 
@@ -76,7 +76,7 @@ class UserService:
         return Token(access_token=access_token, refresh_token=refresh_token)
 
     def refresh_token(self, refresh_token_str: str) -> Token:
-        payload = decode_access_token(refresh_token_str)
+        payload = decode_token(refresh_token_str)
 
         if payload.get("type") != "refresh":
             raise InvalidTokenException()
