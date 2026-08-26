@@ -21,13 +21,33 @@ class SiteService:
     def __init__(self, db: Session):
         self.db = db
 
-    def log_activity(
+    def _log_activity(
         self, user_id: int, site_id: int, action: str, details: str = None
     ) -> None:
         log_entry = ActivityLogModel(
             user_id=user_id, site_id=site_id, action=action, details=details
         )
         self.db.add(log_entry)
+        
+    def _check_owner_access(self, site_id: int, user_id: int) -> ConstructionSiteModel:
+            site_record = (
+                self.db.query(ConstructionSiteModel)
+                .filter(
+                    ConstructionSiteModel.id == site_id,
+                    ConstructionSiteModel.is_deleted == False,
+                )
+                .first()
+            )
+    
+            if not site_record:
+                raise SiteNotFoundError(site_id)
+    
+            if site_record.owner_id != user_id:
+                raise PermissionDeniedError(
+                    "Chỉ Owner mới có quyền chỉnh sửa hoặc xóa công trình!"
+                )
+    
+            return site_record
 
     def create_site(
         self, site_data: ConstructionSiteCreate, current_user: UserModel
@@ -45,7 +65,7 @@ class SiteService:
         )
         self.db.add(new_member)
 
-        self.log_activity(
+        self._log_activity(
             user_id=current_user.id,
             site_id=new_site.id,
             action="CREATE_SITE",
@@ -105,37 +125,18 @@ class SiteService:
 
         return site_record
 
-    def check_owner_access(self, site_id: int, user_id: int) -> ConstructionSiteModel:
-        site_record = (
-            self.db.query(ConstructionSiteModel)
-            .filter(
-                ConstructionSiteModel.id == site_id,
-                ConstructionSiteModel.is_deleted == False,
-            )
-            .first()
-        )
-
-        if not site_record:
-            raise SiteNotFoundError(site_id)
-
-        if site_record.owner_id != user_id:
-            raise PermissionDeniedError(
-                "Chỉ Owner mới có quyền chỉnh sửa hoặc xóa công trình!"
-            )
-
-        return site_record
 
     def update_site(
         self, site_id: int, update_data: ConstructionSiteUpdate, current_user: UserModel
     ) -> ConstructionSiteModel:
-        site_record = self.check_owner_access(site_id, current_user.id)
+        site_record = self._check_owner_access(site_id, current_user.id)
 
         update_dict = update_data.model_dump(exclude_unset=True)
 
         for key, value in update_dict.items():
             setattr(site_record, key, value)
 
-        self.log_activity(
+        self._log_activity(
             user_id=current_user.id,
             site_id=site_record.id,
             action="UPDATE_SITE",
@@ -147,11 +148,11 @@ class SiteService:
         return site_record
 
     def delete_site(self, site_id: int, current_user: UserModel) -> None:
-        site_record = self.check_owner_access(site_id, current_user.id)
+        site_record = self._check_owner_access(site_id, current_user.id)
 
         site_record.is_deleted = True
 
-        self.log_activity(
+        self._log_activity(
             user_id=current_user.id,
             site_id=site_record.id,
             action="DELETE_SITE",
@@ -162,7 +163,7 @@ class SiteService:
     def add_member(
         self, site_id: int, member_data: SiteMemberCreate, current_user: UserModel
     ) -> SiteMemberModel:
-        site_record = self.check_owner_access(site_id, current_user.id)
+        site_record = self._check_owner_access(site_id, current_user.id)
 
         target_user = (
             self.db.query(UserModel)
@@ -190,7 +191,7 @@ class SiteService:
         )
         self.db.add(new_member)
 
-        self.log_activity(
+        self._log_activity(
             user_id=current_user.id,
             site_id=site_record.id,
             action="ADD_MEMBER",
@@ -203,7 +204,7 @@ class SiteService:
     def remove_member(
         self, site_id: int, target_user_id: int, current_user: UserModel
     ) -> None:
-        site_record = self.check_owner_access(site_id, current_user.id)
+        site_record = self._check_owner_access(site_id, current_user.id)
 
         if site_record.owner_id == target_user_id:
             raise CannotRemoveOwnerError()
@@ -222,7 +223,7 @@ class SiteService:
 
         self.db.delete(member_record)
 
-        self.log_activity(
+        self._log_activity(
             user_id=current_user.id,
             site_id=site_record.id,
             action="REMOVE_MEMBER",

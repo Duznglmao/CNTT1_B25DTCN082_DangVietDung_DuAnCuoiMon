@@ -2,6 +2,7 @@ from fastapi import FastAPI, status, Request
 from slowapi.middleware import SlowAPIMiddleware
 from contextlib import asynccontextmanager
 from loguru import logger
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.common import limiter, register_handler, StandardResponse, success_response, setup_logging
 from app.core import settings
@@ -34,6 +35,13 @@ app = FastAPI(
 
 app.state.limiter = limiter
 app.add_middleware(SlowAPIMiddleware)
+app.add_middleware(
+    CORSMiddleware,
+    allow_headers=["*"],
+    allow_methods=["*"],
+    allow_origins=["*"],
+    allow_credentials=True
+)
 
 register_handler(app)
 app.include_router(auth_router)
@@ -51,6 +59,7 @@ app.include_router(work_item_router)
 )
 @limiter.limit(settings.RATE_LIMIT_DEFAULT)
 def health_check(request: Request) -> StandardResponse[dict[str, str]]:
+    """Kiểm tra kết nối FastAPI. Endpoint public, không yêu cầu JWT."""
     return success_response(
         request=request,
         message="FastAPI chạy tốt",

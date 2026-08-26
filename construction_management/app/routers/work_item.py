@@ -13,7 +13,11 @@ from app.services.work_item import WorkItemService
 router = APIRouter(prefix="/work-items", tags=["Work Items"])
 
 
-@router.patch("/{item_id}", response_model=StandardResponse[WorkItemDetailResponse])
+@router.patch(
+    "/{item_id}",
+    response_model=StandardResponse[WorkItemDetailResponse],
+    summary="Cập nhật hạng mục thi công",
+)
 @limiter.limit(settings.RATE_LIMIT_DEFAULT)
 def update_work_item_endpoint(
     request: Request,
@@ -22,11 +26,12 @@ def update_work_item_endpoint(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[UserModel, Depends(get_current_active_user)],
 ):
+    """Cập nhật hạng mục thi công. Người có permission phù hợp được phép thực hiện."""
     item = WorkItemService(db).update_work_item(item_id, update_data, current_user)
     return success_response(request=request, message="Cập nhật thành công!", data=item)
 
 
-@router.post("/{item_id}/attachments")
+@router.post("/{item_id}/attachments", summary="Upload file")
 @limiter.limit(settings.RATE_LIMIT_DEFAULT)
 def upload_file_endpoint(
     request: Request,
@@ -35,6 +40,7 @@ def upload_file_endpoint(
     current_user: Annotated[UserModel, Depends(get_current_active_user)],
     file: UploadFile = File(...),
 ):
+    """Upload file. Thành viên được phép thực hiện."""
     attachment = WorkItemService(db).upload_attachment(item_id, file, current_user)
     return success_response(
         request=request,
@@ -43,7 +49,11 @@ def upload_file_endpoint(
     )
 
 
-@router.get("/{item_id}", response_model=StandardResponse[WorkItemDetailResponse])
+@router.get(
+    "/{item_id}",
+    response_model=StandardResponse[WorkItemDetailResponse],
+    summary="Chi tiết hạng mục thi công",
+)
 @limiter.limit(settings.RATE_LIMIT_DEFAULT)
 def get_work_item_endpoint(
     request: Request,
@@ -51,13 +61,18 @@ def get_work_item_endpoint(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[UserModel, Depends(get_current_active_user)],
 ):
+    """Chi tiết hạng mục thi công. Thành viên được phép thực hiện."""
     item = WorkItemService(db).get_work_item_detail(item_id, current_user)
     return success_response(
         request=request, message="Lấy chi tiết thành công!", data=item
     )
 
 
-@router.delete("/{item_id}", response_model=StandardResponse[None])
+@router.delete(
+    "/{item_id}",
+    response_model=StandardResponse[None],
+    summary="Xóa hạng mục thi công",
+)
 @limiter.limit(settings.RATE_LIMIT_DEFAULT)
 def delete_work_item_endpoint(
     request: Request,
@@ -65,5 +80,6 @@ def delete_work_item_endpoint(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[UserModel, Depends(get_current_active_user)],
 ):
+    """Xóa hạng mục thi công. Người có permission phù hợp phép thực hiện."""
     WorkItemService(db).delete_work_item(item_id, current_user)
     return success_response(request=request, message="Xóa hạng mục thành công!")

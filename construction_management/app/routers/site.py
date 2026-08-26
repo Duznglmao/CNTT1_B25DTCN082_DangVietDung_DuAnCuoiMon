@@ -25,6 +25,7 @@ router = APIRouter(prefix="/construction-sites", tags=["Construction Sites"])
     "",
     response_model=StandardResponse[ConstructionSiteResponse],
     status_code=status.HTTP_201_CREATED,
+    summary="Tạo công trình",
 )
 @limiter.limit(settings.RATE_LIMIT_DEFAULT)
 def create_site_endpoint(
@@ -33,6 +34,7 @@ def create_site_endpoint(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[UserModel, Depends(get_current_active_user)],
 ):
+    """Tạo công trình. Người dùng đã đăng nhập được phép thực hiện."""
     new_site = SiteService(db).create_site(site_data, current_user)
     return success_response(
         request=request,
@@ -46,6 +48,7 @@ def create_site_endpoint(
     "",
     response_model=StandardResponse[list[ConstructionSiteResponse]],
     status_code=status.HTTP_200_OK,
+    summary="Danh sách công trình của tôi",
 )
 @limiter.limit(settings.RATE_LIMIT_DEFAULT)
 def get_sites_endpoint(
@@ -56,6 +59,7 @@ def get_sites_endpoint(
         default=None, description="Tìm kiếm theo tên công trình"
     ),
 ):
+    """Danh sách công trình của tôi. Người dùng đã đăng nhập được phép thực hiện."""
     sites = SiteService(db).get_sites(current_user, search)
     return success_response(
         request=request, message="Lấy danh sách công trình thành công!", data=sites
@@ -66,6 +70,7 @@ def get_sites_endpoint(
     "/{site_id}",
     response_model=StandardResponse[ConstructionSiteResponse],
     status_code=status.HTTP_200_OK,
+    summary="Chi tiết công trình",
 )
 @limiter.limit(settings.RATE_LIMIT_DEFAULT)
 def get_site_detail_endpoint(
@@ -74,6 +79,7 @@ def get_site_detail_endpoint(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[UserModel, Depends(get_current_active_user)],
 ):
+    """Chi tiết công trình. Thành viên được phép thực hiện."""
     site_record = SiteService(db).get_site_detail(site_id, current_user)
     return success_response(
         request=request,
@@ -86,6 +92,7 @@ def get_site_detail_endpoint(
     "/{site_id}",
     response_model=StandardResponse[ConstructionSiteResponse],
     status_code=status.HTTP_200_OK,
+    summary="Cập nhật công trình",
 )
 @limiter.limit(settings.RATE_LIMIT_DEFAULT)
 def update_site_endpoint(
@@ -95,6 +102,7 @@ def update_site_endpoint(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[UserModel, Depends(get_current_active_user)],
 ):
+    """Cập nhật công trình. Chỉ Owner được phép thực hiện."""
     updated_site = SiteService(db).update_site(site_id, update_data, current_user)
     return success_response(
         request=request, message="Cập nhật công trình thành công!", data=updated_site
@@ -102,7 +110,10 @@ def update_site_endpoint(
 
 
 @router.delete(
-    "/{site_id}", response_model=StandardResponse[None], status_code=status.HTTP_200_OK
+    "/{site_id}",
+    response_model=StandardResponse[None],
+    status_code=status.HTTP_200_OK,
+    summary="Xóa công trình",
 )
 @limiter.limit(settings.RATE_LIMIT_DEFAULT)
 def delete_site_endpoint(
@@ -111,6 +122,7 @@ def delete_site_endpoint(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[UserModel, Depends(get_current_active_user)],
 ):
+    """Xóa công trình. Chỉ Owner được phép thực hiện."""
     SiteService(db).delete_site(site_id, current_user)
     return success_response(
         request=request,
@@ -122,6 +134,7 @@ def delete_site_endpoint(
     "/{site_id}/members",
     response_model=StandardResponse[SiteMemberResponse],
     status_code=status.HTTP_201_CREATED,
+    summary="Thêm thành viên",
 )
 @limiter.limit(settings.RATE_LIMIT_DEFAULT)
 def add_member_endpoint(
@@ -131,6 +144,7 @@ def add_member_endpoint(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[UserModel, Depends(get_current_active_user)],
 ):
+    """Thêm thành viên. Chỉ Owner được phép thực hiện."""
     new_member = SiteService(db).add_member(site_id, member_data, current_user)
     return success_response(
         request=request,
@@ -144,6 +158,7 @@ def add_member_endpoint(
     "/{site_id}/members/{user_id}",
     response_model=StandardResponse[None],
     status_code=status.HTTP_200_OK,
+    summary="Xóa thành viên",
 )
 @limiter.limit(settings.RATE_LIMIT_DEFAULT)
 def remove_member_endpoint(
@@ -153,6 +168,7 @@ def remove_member_endpoint(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[UserModel, Depends(get_current_active_user)],
 ):
+    """Xóa thành viên. Chỉ Owner được phép thực hiện."""
     SiteService(db).remove_member(site_id, user_id, current_user)
     return success_response(
         request=request, message="Xóa thành viên khỏi công trình thành công!"
@@ -163,6 +179,7 @@ def remove_member_endpoint(
     "/{site_id}/members",
     response_model=StandardResponse[list[SiteMemberResponse]],
     status_code=status.HTTP_200_OK,
+    summary="Danh sách thành viên",
 )
 @limiter.limit(settings.RATE_LIMIT_DEFAULT)
 def get_members_endpoint(
@@ -171,13 +188,18 @@ def get_members_endpoint(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[UserModel, Depends(get_current_active_user)],
 ):
+    """Danh sách thành viên. Thành viên được phép thực hiện."""
     members = SiteService(db).get_members(site_id, current_user)
     return success_response(
         request=request, message="Lấy danh sách thành viên thành công!", data=members
     )
 
 
-@router.post("/{site_id}/work-items", response_model=StandardResponse[WorkItemResponse])
+@router.post(
+    "/{site_id}/work-items",
+    response_model=StandardResponse[WorkItemResponse],
+    summary="Tạo hạng mục thi công",
+)
 @limiter.limit(settings.RATE_LIMIT_DEFAULT)
 def create_work_item_endpoint(
     request: Request,
@@ -186,6 +208,7 @@ def create_work_item_endpoint(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[UserModel, Depends(get_current_active_user)],
 ):
+    """Tạo hạng mục thi công. Thành viên được phép thực hiện."""
     item = WorkItemService(db).create_work_item(site_id, data, current_user)
     return success_response(
         request=request, message="Tạo công việc thành công!", data=item
@@ -193,7 +216,9 @@ def create_work_item_endpoint(
 
 
 @router.get(
-    "/{site_id}/work-items", response_model=StandardResponse[list[WorkItemResponse]]
+    "/{site_id}/work-items",
+    response_model=StandardResponse[list[WorkItemResponse]],
+    summary="List/filter/search hạng mục thi công",
 )
 @limiter.limit(settings.RATE_LIMIT_DEFAULT)
 def get_work_items_endpoint(
@@ -209,6 +234,7 @@ def get_work_items_endpoint(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
 ):
+    """List/filter/search hạng mục thi công. Thành viên được phép thực hiện."""
     items = WorkItemService(db).get_work_items(
         site_id,
         current_user,
